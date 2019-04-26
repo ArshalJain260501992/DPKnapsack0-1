@@ -11,9 +11,9 @@
 	</parent>
 	<groupId>com.mobiquityinc.packer</groupId>
 	<artifactId>DPKnapsack </artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>Kalah-1</name>
-	<description>Knapsack Problem</description>
+	<version>1.0.0</version>
+	<name>DpKnapsack</name>
+	<description>Packer Problem</description>
 
 	<properties>
 		<java.version>1.8</java.version>

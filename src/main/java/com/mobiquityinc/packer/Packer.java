@@ -2,8 +2,10 @@ package com.mobiquityinc.packer;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +18,8 @@ import java.util.List;
  *
  */
 public class Packer {
+
+	private static final int CAPACITY_COST_LIMIT = 100;
 
 	private Packer() {
 
@@ -52,27 +56,23 @@ public class Packer {
 	public static String pack(String filePath) throws APIException {
 		StringBuilder response = new StringBuilder();
 		File file = new File(filePath);
-		try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+		try (BufferedReader in = new BufferedReader(
+				new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
 			String line;
+
 			while ((line = in.readLine()) != null) {
 				if (line.length() == 0)
 					continue;
 				String[] lineArray = line.split(":");
 				double capacity = Integer.parseInt(lineArray[0].trim());
+				if (capacity > CAPACITY_COST_LIMIT) {
+					throw new APIException("Capacity " + capacity + " exceeds limit :: " + CAPACITY_COST_LIMIT // NOSONAR
+							+ " :: for line :: " + line); // NOSONAR
+				}
+
 				String[] stringItems = lineArray[1].trim().split(" ");
 				List<Thing> things = new ArrayList<>();
-				for (String stringItem : stringItems) {
-					String[] itemDetails = stringItem.split(",");
-					int id = Integer.parseInt(itemDetails[0].substring(1));
-					Double weight = Double.parseDouble(itemDetails[1]);
-					if (Character.isDigit(itemDetails[2].charAt(0))) {
-						throw new APIException(
-								"Currency missing for cost :: " + itemDetails[2] + " :: for line :: " + line);
-					}
-					double price = Double.parseDouble(itemDetails[2].substring(1, itemDetails[2].length() - 1));
-					Thing item = new Thing(id, weight, price, new Double(weight * 100).intValue());
-					things.add(item);
-				}
+				readAndValidateRequest(line, stringItems, things);
 				response.append(fillPackage(things, new Double(capacity * 100).intValue())).append("\n");
 			}
 		} catch (IOException e) {
@@ -86,6 +86,40 @@ public class Packer {
 	}
 
 	/**
+	 * @param line
+	 * @param stringItems
+	 * @param things
+	 * @throws NumberFormatException
+	 * @throws APIException
+	 */
+	private static void readAndValidateRequest(String line, String[] stringItems, List<Thing> things)
+			throws APIException {
+		for (String stringItem : stringItems) {
+			String[] itemDetails = stringItem.split(",");
+			int id = Integer.parseInt(itemDetails[0].substring(1));
+			Double weight = Double.parseDouble(itemDetails[1]);
+			if (weight > CAPACITY_COST_LIMIT) {
+				throw new APIException(
+						"Weight " + weight + " exceeds limit :: " + CAPACITY_COST_LIMIT + " :: for line :: " + line);
+			}
+
+			if (Character.isDigit(itemDetails[2].charAt(0))) {
+				throw new APIException("Currency missing for cost :: " + itemDetails[2] + " :: for line :: " + line);
+			}
+
+			double price = Double.parseDouble(itemDetails[2].substring(1, itemDetails[2].length() - 1));
+
+			if (price > CAPACITY_COST_LIMIT) {
+				throw new APIException(
+						"Price " + price + " exceeds limit :: " + CAPACITY_COST_LIMIT + " :: for line :: " + line);
+			}
+
+			Thing item = new Thing(id, weight, price, new Double(weight * 100).intValue());
+			things.add(item);
+		}
+	}
+
+	/**
 	 * The packaging problem is basically, <strong>0/1 Knapsack problem
 	 * </strong>that is solved using Dynamic Programming. There is optimal
 	 * substructure that we figure out and use it to get to the final result. Also,
@@ -96,7 +130,7 @@ public class Packer {
 	 * @param capacity {@link Integer}
 	 * @return stringOfndices {@link String}
 	 */
-	public static String fillPackage(List<Thing> things, Integer capacity) {
+	private static String fillPackage(List<Thing> things, Integer capacity) {
 		double[] cache = new double[capacity + 1];
 		List<Integer>[] indexCache = new ArrayList[capacity + 1];
 		for (Thing thing : things) {
