@@ -17,6 +17,10 @@ import java.util.List;
  */
 public class Packer {
 
+	private Packer() {
+
+	}
+
 	/**
 	 * This method reads a file with multiple lines, where each line is supposed to
 	 * be in a format <br/>
