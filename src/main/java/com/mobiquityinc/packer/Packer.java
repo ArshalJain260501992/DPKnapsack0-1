@@ -7,13 +7,44 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This class exposes method that determines which things to put into a package
+ * so that the total weight is less than or equal to the package limit and the
+ * total cost is as large as possible.
+ * 
+ * @author Arshal Jain
+ *
+ */
 public class Packer {
 
-//	public static void main(String[] args) throws APIException {
-//		System.out.println(
-//				pack("C:\\Users\\Arshal Jain\\Documents\\eclipseSpace\\DPKnapsack\\src\\main\\resources\\TestFile"));
-//	}
-
+	/**
+	 * This method reads a file with multiple lines, where each line is supposed to
+	 * be in a format <br/>
+	 * 'package-capacity' : list of things, where each thing is ('index', 'weight',
+	 * 'cost') <br/>
+	 * eg. <br/>
+	 * 81 : (1,53.38,€45) (2,88.62,€98) (3,78.48,€3) (4,72.30,€76) (5,30.18,€9)
+	 * (6,46.34,€48) <br/>
+	 * 8 : (1,15.3,€34) <br/>
+	 * 75 : (1,85.31,€29) (2,14.55,€74) (3,3.98,€16) (4,26.24,€55) (5,63.69,€52)
+	 * (6,76.25,€75) (7,60.02,€74) (8,93.18,€35) (9,89.95,€78) <br/>
+	 * 56 : (1,90.72,€13) (2,33.80,€40) (3,43.15,€10) (4,37.97,€16) (5,46.81,€36)
+	 * (6,48.77,€79) (7,81.80,€45) (8,19.36,€79) (9,6.76,€64) <br/>
+	 * 
+	 * For each line it separately processes the input and prepares an entry [list
+	 * of index] in the response
+	 * 
+	 * @param filePath {@link String}
+	 * @return response {@link String} <br/>
+	 *         Each line is comma separated indices of things which give maximum
+	 *         cost within capacity <br/>
+	 *         e.g. <br/>
+	 *         4 <br/>
+	 *         - <br/>
+	 *         2,7 <br/>
+	 *         8,9<br/>
+	 * @throws APIException @{@link APIException}
+	 */
 	public static String pack(String filePath) throws APIException {
 		StringBuilder response = new StringBuilder();
 		File file = new File(filePath);
@@ -50,6 +81,17 @@ public class Packer {
 
 	}
 
+	/**
+	 * The packaging problem is basically, <strong>0/1 Knapsack problem
+	 * </strong>that is solved using Dynamic Programming. There is optimal
+	 * substructure that we figure out and use it to get to the final result. Also,
+	 * there are overlapping sub-problems, so caching the repeatedly used calculated
+	 * values helped the performance.
+	 * 
+	 * @param things   {@link List}<{@link Thing}>
+	 * @param capacity {@link Integer}
+	 * @return stringOfndices {@link String}
+	 */
 	public static String fillPackage(List<Thing> things, Integer capacity) {
 		double[] cache = new double[capacity + 1];
 		List<Integer>[] indexCache = new ArrayList[capacity + 1];
