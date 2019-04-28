@@ -1,4 +1,4 @@
-package com.mobiquityinc.packer;
+package com.mobiquityinc;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

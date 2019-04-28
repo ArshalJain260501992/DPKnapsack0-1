@@ -15,6 +15,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.mobiquityinc.packer.exceptions.APIException;
+
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class PackerTest {
